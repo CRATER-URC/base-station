@@ -63,6 +63,7 @@ unsigned long previousCheckMillis = 0;
 unsigned long previousWakeMillis = 0;
 unsigned long currentMillis = 0;
 uint16_t signalAverage = 0;
+int numberAttempts = 0;
 
 bool messageOutFlag = false;
 bool resetConfirmed = false;
@@ -71,7 +72,7 @@ bool waitingForWake = false;
 bool firstReset = true;
 bool resetWaitFlag = false;
 bool wakeupConfirmed = false;
-bool wakeOutFlag = false;
+bool wakeOutFlag = true;
 bool wakeFlag = false;
 
 //Blink LED Function
@@ -261,7 +262,14 @@ void loop()
     if ((currentMillis - lastHeartbeat > heartbeatInterval) | (lastHeartbeat == 0))
     {
       Serial.println("DISCONNECTED");
-      wakeOutFlag = true;
+      numberAttempts++;
+      
+      if (numberAttempts >= 3) 
+      {
+        wakeOutFlag = true;
+        numberAttempts = 0;
+      }
+      
     }
     else
     {
