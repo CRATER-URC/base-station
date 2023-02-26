@@ -52,6 +52,7 @@ const int checkInterval = 3000;     // number of millisecs before checking for h
 const int confInterval = 3500;      // number of millisecs to prevent false confirms
 const int resetInterval = 3000;     // number of millisecs waiting for reset confirmation
 const int heartbeatInterval = 5000; // number of millisecs waiting for Rover Heartbeat
+const int flagInterval = 3000;      // number of millisecs waiting for flag serial message
 
 // Variables
 unsigned long previousSignalMillis = 0;
@@ -61,6 +62,7 @@ unsigned long previousRecvMillis = 0;
 unsigned long previousConfMillis = 0;
 unsigned long previousCheckMillis = 0;
 unsigned long previousWakeMillis = 0;
+unsigned long previousFlagMillis = 0;
 unsigned long currentMillis = 0;
 uint16_t signalAverage = 0;
 int numberAttempts = 0;
@@ -74,6 +76,7 @@ bool resetWaitFlag = false;
 bool wakeupConfirmed = false;
 bool wakeOutFlag = true;
 bool wakeFlag = false;
+bool motorsKilled = false;
 
 //Blink LED Function
 void blinkLED(int onDelayTime, int offDelayTime)
@@ -132,6 +135,7 @@ void checkMessages()
   if (messageIn.resetConfirmed && !resetConfirmed)
   {
     resetConfirmed = true;
+    motorsKilled = true;
   }
   else
   {
@@ -155,7 +159,7 @@ void sendMessages()
     uint8_t len = sizeof(messageOut);
     messageOut.statusUpdate = 1;
     memcpy(bufO, &messageOut, len);
-    //Serial.println("Message ============= sending");
+    Serial.println("Message ============= sending");
     for (int i = 0; i <= 4; i++)
     {
       if (manager.sendto(bufO, len, roverAddress))
@@ -167,6 +171,50 @@ void sendMessages()
     messageOut.resetFlag = 0;
     messageOutFlag = false;
     wakeOutFlag = false;
+  }
+}
+
+void setMessageFlags()
+{
+  if (currentMillis - previousFlagMillis >= flagInterval)
+  {
+    long temp;
+    if (Serial && Serial.available() > 0)
+    {
+      Serial.println("Enter 1 to change rover mode to 1");
+      Serial.println("Enter 2 to change rover mode to 2");
+      Serial.println("Enter 3 to kill motors");
+      Serial.print("  Current Rover Mode: ");
+      Serial.println(roverAddress, HEX);
+      Serial.println();
+
+      /* if a number is waiting, process it */
+      if (isdigit(Serial.peek()))
+      {
+        temp = Serial.parseInt();
+        if (temp == 1)
+        {
+          // messageOut.roverMode = 1;
+        }
+        else if (temp == 2) 
+        {
+          // messageOut.roverMode = 2;
+        }
+        else if (temp == 3) 
+        {
+          messageOutFlag = true;
+          Serial.println("Attempting to kill motors");
+        }
+      }
+      /* else throw it away */
+      else
+      {
+        Serial.read();
+      }
+
+      Serial.println("");
+    }
+    previousFlagMillis = currentMillis;
   }
 }
 
@@ -263,7 +311,7 @@ void loop()
     {
       Serial.println("DISCONNECTED");
       numberAttempts++;
-      
+
       if (numberAttempts >= 3) 
       {
         wakeOutFlag = true;
@@ -274,6 +322,12 @@ void loop()
     else
     {
       Serial.println("CONNECTED");
+    }
+
+    if (motorsKilled)
+    {
+      motorsKilled = false;
+      Serial.println("MOTOR KILL CONFIRMED");
     }
 
     // Remember the time and value of this update
@@ -329,6 +383,7 @@ void loop()
   }
   
   //interrupts();
+  setMessageFlags();
   checkMessages();
   sendMessages();
   delay(50);
