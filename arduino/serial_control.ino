@@ -11,7 +11,7 @@ constexpr int ENABLE_PINS[]       = { 9, 10, 11, 12, 13, 14};
 constexpr int DIRECTION_PINS[]    = {15, 16, 17, 18, 19, 20};
 constexpr int DIRECTION_INVERTS[] = { 0,  0,  0,  0,  0,  0};
 
-constexpr int TIMEOUT_MILLIS = 2000;
+constexpr int TIMEOUT_MILLIS = 4000;
 unsigned long last_command = 0;
 bool stopped = true;
 
@@ -36,8 +36,10 @@ void loop() {
   String read;
   if (Serial.available()) {
     last_command = millis();
+    stopped = false;
     read = Serial.readString();
     int pwm_values[NUM_PINS];
+
     if (read.equals("0")) {
       stopped = true;
     } else if (read.indexOf(' ') == read.lastIndexOf(' ') && read.indexOf(' ') > 0) {
@@ -45,7 +47,7 @@ void loop() {
       String str1 = read.substring(0, space);
       String str2 = read.substring(space + 1);
       int val1 = str1.toInt();
-      int val2 = str1.toInt();
+      int val2 = str2.toInt();
       for (int i = 0; i < NUM_PINS / 2; i++) {
         pwm_values[i] = val1;
         pwm_values[NUM_PINS - 1 - i] = val2;
@@ -73,7 +75,6 @@ void loop() {
         }
       }
     }
-    Serial.println(read);
     for (int i = 0; i < NUM_PINS; i++) {
       if (stopped) {
         digitalWrite(ENABLE_PINS[i], LOW);
@@ -88,11 +89,12 @@ void loop() {
         digitalWrite(DIRECTION_PINS[i], HIGH);
       }
     }
-    Serial.println("\nINPUT:  " + read);
-    Serial.println("OUTPUT: " + pwm_values[0]);
+    Serial.println("INPUT:  " + read);
+    Serial.print("OUTPUT: " + (String) pwm_values[0]);
     for (int i = 1; i < NUM_PINS; i++) {
-      Serial.print(" " + pwm_values[i]);
+      Serial.print(" " + (String) pwm_values[i]);
     }
+    Serial.println("\n");
   } else if ((millis() - last_command) >= TIMEOUT_MILLIS && !stopped) {
     for (int i = 0; i < NUM_PINS; i++) {
       analogWrite(PWM_PINS[i], 0);
