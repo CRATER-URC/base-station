@@ -110,9 +110,10 @@ void loop() {
         digitalWrite(ENABLE_PINS[i], LOW);
         pwm_values[i] = 0;
       } else {
+        pwm_values[i] = constrain(pwm_values[i], -MAX_PWM, MAX_PWM);
         digitalWrite(ENABLE_PINS[i], HIGH);
       }
-      analogWrite(PWM_PINS[i], constrain(abs(pwm_values[i]), 0, MAX_PWM));
+      analogWrite(PWM_PINS[i], abs(pwm_values[i]));
       if ((DIRECTION_INVERTS[i] == 1) == (pwm_values[i] < 0)) {
         digitalWrite(DIRECTION_PINS[i], LOW);
       } else {
