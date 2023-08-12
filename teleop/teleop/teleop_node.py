@@ -6,6 +6,7 @@ from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int32
 from std_msgs.msg import Int32MultiArray
+from std_msgs.msg import Float32
 from std_msgs.msg import Float64
 from std_msgs.msg import Float64MultiArray
 
@@ -24,8 +25,8 @@ class MinimalPublisher(Node):
             self.on_joy,
             1)
         
-        self.publisher_L = self.create_publisher(Float64, 'vel_L', 1)
-        self.publisher_R = self.create_publisher(Float64, 'vel_R', 1)
+        self.publisher_L = self.create_publisher(Float32, 'vel_L', 1)
+        self.publisher_R = self.create_publisher(Float32, 'vel_R', 1)
 
         # self.publisher_ = self.create_publisher(String, 'topic', 10)
         # timer_period = 0.5  # seconds
@@ -82,8 +83,8 @@ class MinimalPublisher(Node):
             self.operating_mode = 1
             self.get_logger().info('Changed to Driving Mode')
 
-        left = Float64()
-        right = Float64()
+        left = Float32()
+        right = Float32()
         # Publish Speeds
         if self.operating_mode == 1:
             left.data = left_speed

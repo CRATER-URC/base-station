@@ -1,4 +1,9 @@
 #include <assert.h>
+#include <ros.h>
+#include <std_msgs/String.h>
+#include <std_msgs/Float32.h>
+
+ros::NodeHandle  nh;
 
 // Takes in one of three possible commands:
 // 0  ------------> Disable all motors
@@ -18,6 +23,26 @@ bool stopped = true;
 constexpr int MAX_PWM = 255;
 constexpr int PORT = 9600;
 
+float left_vel = 0.0;
+float right_vel = 0.0;
+
+void vel_L_cb( const std_msgs::Float32& cmd_msg){
+  left_vel = cmd_msg.data; //float  
+  // digitalWrite(13, HIGH-digitalRead(13));  //toggle led  
+  last_command = millis();
+  }
+
+void vel_R_cb( const std_msgs::Float32& cmd_msg){
+  right_vel = cmd_msg.data; //float  
+  // digitalWrite(13, HIGH-digitalRead(13));  //toggle led  
+  last_command = millis();
+  }
+
+  ros::Subscriber<std_msgs::Float32> sub_L("vel_L", vel_L_cb);
+  ros::Subscriber<std_msgs::Float32> sub_R("vel_R", vel_R_cb);
+
+  // std_msgs::Float64 myData;
+  // ros::Publisher sendData("float_data", &myData);
 
 void setup() {
   Serial.begin(PORT);
@@ -30,6 +55,11 @@ void setup() {
     pinMode(ENABLE_PINS[i], OUTPUT);
     pinMode(DIRECTION_PINS[i], OUTPUT);
   }
+
+  pinMode(13, OUTPUT);
+  nh.initNode();
+  nh.subscribe(sub_L);
+  nh.subscribe(sub_R);
 }
 
 void loop() {
@@ -103,4 +133,6 @@ void loop() {
     }
     Serial.println("MOTOR TIMEOUT");
   }
+  nh.spinOnce();
+  delay(1);
 }
