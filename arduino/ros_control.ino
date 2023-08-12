@@ -61,8 +61,6 @@ ros::Subscriber<std_msgs::Float32> sub_R("vel_R", vel_R_cb);
 
 
 void setup() {
-  Serial.begin(PORT);
-
   assert(sizeof(PWM_PINS) > 0);
   assert(sizeof(PWM_PINS) / sizeof(PWM_PINS[0]) == NUM_PINS);
   assert(sizeof(PWM_PINS) == sizeof(ENABLE_PINS));
